@@ -15,7 +15,7 @@ use {
 fn main() {
     JloggerBuilder::new()
         .max_level(LevelFilter::DEBUG)
-        .log_file(Some(("/tmp/wamr-runtime-rs.log", false)))
+        .log_file(Some(("/tmp/wamr-runner-rs.log", false)))
         .log_console(false)
         .log_time(LogTimeFormat::TimeNone)
         .build();
@@ -44,6 +44,7 @@ fn main() {
         .arg("-DWAMR_BUILD_INTERP=1")
         .arg("-DWAMR_BUILD_AOT=1")
         .arg("-DWAMR_BUILD_LIBC_WASI=1")
+        .arg("-DWAMR_BUILD_DUMP_CALL_STACK=1")
         .arg("-DWAMR_BUILD_PLATFORM=linux")
         .stdout(Stdio::from(output.try_clone().unwrap()))
         .stderr(Stdio::from(output.try_clone().unwrap()))

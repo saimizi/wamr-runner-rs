@@ -81,11 +81,42 @@ const ERROR_BUF_LEN: u32 = 1024;
 
 impl Wamr {
     pub fn run(wasm: &str) -> Result<(), WamrError> {
-        let mut result = unsafe { libiwasm::wasm_runtime_init() };
+        /*
+                let mut result = unsafe { libiwasm::wasm_runtime_init() };
+                if !result {
+                    return Err(WamrError::WamrErr)
+                        .into_report()
+                        .attach_printable("Failed to initialize wasm runtime");
+                }
+        */
+        let mut init_args = libiwasm::RuntimeInitArgs {
+            mem_alloc_type: libiwasm::mem_alloc_type_t_Alloc_With_System_Allocator,
+            mem_alloc_option: libiwasm::MemAllocOption {
+                pool: libiwasm::MemAllocOption__bindgen_ty_1 {
+                    heap_buf: ptr::null_mut(),
+                    heap_size: 0,
+                },
+            },
+            native_module_name: ptr::null(),
+            native_symbols: ptr::null_mut(),
+            n_native_symbols: 0,
+            max_thread_num: 0,
+            ip_addr: [0; 128usize],
+            unused: 0,
+            instance_port: 0,
+            fast_jit_code_cache_size: 0,
+            running_mode: 0,
+            llvm_jit_opt_level: 0,
+            llvm_jit_size_level: 0,
+        };
+
+        let mut result = unsafe {
+            libiwasm::wasm_runtime_full_init(&mut init_args as *mut libiwasm::RuntimeInitArgs)
+        };
         if !result {
             return Err(WamrError::WamrErr)
                 .into_report()
-                .attach_printable("Failed to initialize wasm runtime");
+                .attach_printable("Failed to set init args for wasm runtime");
         }
 
         let mut buf = fs::read(wasm)
@@ -134,6 +165,9 @@ impl Wamr {
                 )
             }
         };
+
+        //drop(mb);
+        //drop(buf);
 
         if module.is_null() {
             let error_str = unsafe {

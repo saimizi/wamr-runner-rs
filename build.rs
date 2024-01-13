@@ -71,9 +71,8 @@ fn main() {
     jinfo!("{}", log);
     let _ = remove_file(wasm_log_file);
 
-
     let wasm_export = format!("{wasm_dir}/core/iwasm/include/wasm_export.h");
-    jinfo!(wasm_export=wasm_export);
+    jinfo!(wasm_export = wasm_export);
     let binding = bindgen::Builder::default()
         .header(&wasm_export)
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))

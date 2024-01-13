@@ -12,11 +12,14 @@ use {
     },
 };
 
+#[allow(unused)]
 #[derive(Debug)]
 pub enum WamrError {
     InvalidVal,
     WamrErr,
     IOErr,
+    NoMemory,
+    UnExpected,
 }
 
 impl Display for WamrError {
@@ -30,8 +33,10 @@ impl std::error::Error for WamrError {}
 
 pub fn error_desc(error: &WamrError) -> (i32, &'static str) {
     match error {
-        WamrError::InvalidVal=> (-1, "Invalid value"),
+        WamrError::InvalidVal => (-1, "Invalid value"),
         WamrError::WamrErr => (-2, "Wamr runtime error"),
         WamrError::IOErr => (-3, "IO error"),
+        WamrError::NoMemory => (-4, "No memory"),
+        WamrError::UnExpected => (-5, "Unexpected error"),
     }
 }

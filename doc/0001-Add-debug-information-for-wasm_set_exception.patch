@@ -1,0 +1,47 @@
+From e74964a6f3902b91bae138fbcd4bf465e10ead8c Mon Sep 17 00:00:00 2001
+From: Seimizu Joukan <joukan.seimizu@gmail.com>
+Date: Sat, 20 Jan 2024 11:48:30 +0900
+Subject: [PATCH] Add debug information for wasm_set_exception.
+
+---
+ core/iwasm/common/wasm_runtime_common.c | 2 +-
+ core/iwasm/interpreter/wasm_runtime.h   | 9 ++++++++-
+ 2 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/core/iwasm/common/wasm_runtime_common.c b/core/iwasm/common/wasm_runtime_common.c
+index e245cf50..3c33e2e5 100644
+--- a/core/iwasm/common/wasm_runtime_common.c
++++ b/core/iwasm/common/wasm_runtime_common.c
+@@ -2433,7 +2433,7 @@ wasm_set_exception_local(WASMModuleInstance *module_inst, const char *exception)
+ }
+ 
+ void
+-wasm_set_exception(WASMModuleInstance *module_inst, const char *exception)
++wasm_set_exception_internal(WASMModuleInstance *module_inst, const char *exception)
+ {
+ #if WASM_ENABLE_THREAD_MGR != 0
+     WASMExecEnv *exec_env =
+diff --git a/core/iwasm/interpreter/wasm_runtime.h b/core/iwasm/interpreter/wasm_runtime.h
+index 89b92b65..ea203b5b 100644
+--- a/core/iwasm/interpreter/wasm_runtime.h
++++ b/core/iwasm/interpreter/wasm_runtime.h
+@@ -458,8 +458,15 @@ bool
+ wasm_call_function(WASMExecEnv *exec_env, WASMFunctionInstance *function,
+                    unsigned argc, uint32 argv[]);
+ 
++#define wasm_set_exception(module, exception) 				\
++do {									\
++	fprintf(stderr, "%s-%d exception: %s\n", 			\
++			__func__, __LINE__, exception); 		\
++	wasm_set_exception_internal(module, exception); 		\
++} while (0)
++
+ void
+-wasm_set_exception(WASMModuleInstance *module, const char *exception);
++wasm_set_exception_internal(WASMModuleInstance *module, const char *exception);
+ 
+ void
+ wasm_set_exception_with_id(WASMModuleInstance *module_inst, uint32 id);
+-- 
+2.25.1
+

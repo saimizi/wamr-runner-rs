@@ -6,7 +6,7 @@ mod libiwasm;
 
 #[allow(unused)]
 use {
-    super::error::WamrError,
+    super::{error::WamrError, Cli},
     core::num::NonZeroUsize,
     error_stack::{IntoReport, Report, Result, ResultExt},
     jlogger_tracing::{
@@ -80,21 +80,38 @@ impl MapBuffer {
 const ERROR_BUF_LEN: u32 = 1024;
 
 impl Wamr {
-    pub fn run(wasm: &str) -> Result<(), WamrError> {
-        /*
-                let mut result = unsafe { libiwasm::wasm_runtime_init() };
-                if !result {
-                    return Err(WamrError::WamrErr)
-                        .into_report()
-                        .attach_printable("Failed to initialize wasm runtime");
-                }
-        */
+    pub fn run(cli: &Cli) -> Result<(), WamrError> {
+        let wasm = cli.wasm.as_str();
+        let mut mem_alloc_type = libiwasm::mem_alloc_type_t_Alloc_With_System_Allocator;
+        let mut global_heap_buf = core::ptr::null_mut();
+        let mut global_heap_size = 0;
+
+        if let Some(heap_kb) = cli.heap_size_kb {
+            let heap = heap_kb * 1024;
+
+            mem_alloc_type = libiwasm::mem_alloc_type_t_Alloc_With_Pool;
+
+            let mut buffer: Vec<u8> = Vec::new();
+            buffer
+                .try_reserve_exact(heap)
+                .map_err(|e| Report::new(WamrError::NoMemory).attach_printable(e))?;
+            buffer.resize(heap, 0);
+
+            jdebug!(buffer_size = buffer.len());
+            global_heap_buf = buffer.leak().as_mut_ptr();
+            global_heap_size = heap;
+        }
+
+        jdebug!(
+            global_heap_buf = format!("{:p}", global_heap_buf),
+            global_heap_size = global_heap_size
+        );
         let mut init_args = libiwasm::RuntimeInitArgs {
-            mem_alloc_type: libiwasm::mem_alloc_type_t_Alloc_With_System_Allocator,
+            mem_alloc_type,
             mem_alloc_option: libiwasm::MemAllocOption {
                 pool: libiwasm::MemAllocOption__bindgen_ty_1 {
-                    heap_buf: ptr::null_mut(),
-                    heap_size: 0,
+                    heap_size: global_heap_size as u32,
+                    heap_buf: global_heap_buf.cast(),
                 },
             },
             native_module_name: ptr::null(),
@@ -108,7 +125,7 @@ impl Wamr {
             running_mode: 0,
             llvm_jit_opt_level: 0,
             llvm_jit_size_level: 0,
-            segue_flags:0,
+            segue_flags: 0,
             enable_linux_perf: false,
         };
 
@@ -132,13 +149,15 @@ impl Wamr {
         let mut error_buf: [libc::c_char; ERROR_BUF_LEN as usize] = [0; ERROR_BUF_LEN as usize];
         let mut mb = MapBuffer::default();
 
-        let ret = unsafe { libiwasm::wasm_runtime_is_xip_file(buf as *mut u8, buf_size) };
+        jdebug!("xip: {:?}", unsafe {
+            libiwasm::wasm_runtime_is_xip_file(buf.cast(), buf_size)
+        });
+
+        let ret = unsafe { libiwasm::wasm_runtime_is_xip_file(buf.cast(), buf_size) };
         if ret {
             let file = File::open(wasm)
                 .into_report()
                 .change_context(WamrError::InvalidVal)?;
-
-            jdebug!("{} is a AOT XIP file", wasm);
 
             mb = MapBuffer::map_file(
                 ptr::null_mut(),
@@ -202,6 +221,9 @@ impl Wamr {
                 .attach_printable(error_str);
         }
 
+        jdebug!("wasi: {:?}", unsafe {
+            libiwasm::wasm_runtime_is_wasi_mode(module_inst)
+        });
         jdebug!("Start running {}", wasm);
 
         result =

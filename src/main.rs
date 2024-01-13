@@ -12,10 +12,14 @@ use {
 
 #[derive(Parser)]
 #[command(author, version, about, long_about= None)]
-struct Cli {
+pub struct Cli {
     /// Execute wasm byte code or AOT file with XIP supported.
     #[arg(short, long, value_name = "WASM BINARY")]
     wasm: String,
+
+    /// Global heap pool size in kb
+    #[arg(long, value_name = "HEAP SIZE")]
+    heap_size_kb: Option<usize>,
 
     #[arg(short, long, action=clap::ArgAction::Count)]
     verbose: u8,
@@ -36,5 +40,5 @@ fn main() -> Result<(), WamrError> {
         .log_time(LogTimeFormat::TimeStamp)
         .build();
 
-    Wamr::run(&cli.wasm)
+    Wamr::run(&cli)
 }

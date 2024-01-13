@@ -1,5 +1,3 @@
-//cspell:word canonicalize rnetmon aarch rustc
-
 #[allow(unused)]
 use {
     jlogger_tracing::{jdebug, jerror, jinfo, jwarn, JloggerBuilder, LevelFilter, LogTimeFormat},
@@ -29,7 +27,7 @@ fn main() {
 
     let out_dir = env::var("OUT_DIR").unwrap();
     let work_dir = format!("{}/wamr", out_dir);
-    let wasm_dir = format!("{}/wamr-1.2.2", current_dir_str);
+    let wasm_dir = format!("{}/wasm-micro-runtime", current_dir_str);
     jinfo!("work_dir={}", work_dir);
 
     let wasm_log_file = "/tmp/wamr.log";
@@ -41,11 +39,15 @@ fn main() {
     Command::new("cmake")
         .current_dir(&work_dir)
         .arg(&wasm_dir)
-        .arg("-DWAMR_BUILD_INTERP=1")
-        .arg("-DWAMR_BUILD_AOT=1")
-        .arg("-DWAMR_BUILD_LIBC_WASI=1")
-        .arg("-DWAMR_BUILD_DUMP_CALL_STACK=1")
         .arg("-DWAMR_BUILD_PLATFORM=linux")
+        .arg("-DWAMR_BUILD_INTERP=1")
+        .arg("-DWAMR_BUILD_FAST_INTERP=1")
+        .arg("-DWAMR_BUILD_AOT=1")
+        .arg("-DWAMR_BUILD_LIBC_BUILTIN=1")
+        .arg("-DWAMR_BUILD_LIBC_WASI=1")
+        .arg("-DWAMR_BUILD_LIBC_WASI_THREADS=1")
+        .arg("-DWAMR_BUILD_SIMD=1")
+        .arg("-DWAMR_BUILD_DUMP_CALL_STACK=1")
         .stdout(Stdio::from(output.try_clone().unwrap()))
         .stderr(Stdio::from(output.try_clone().unwrap()))
         .spawn()
@@ -71,6 +73,8 @@ fn main() {
 
     println!("cargo:rerun-if-changed=wamr-1.2.2");
     println!("cargo:rustc-link-search={}", work_dir);
-    println!("cargo:rustc-link-arg=-liwasm");
+    //println!("cargo:rustc-link-arg=-liwasm");
+    println!("cargo:rustc-link-arg=-lvmlib");
     println!("cargo:rustc-link-arg=-lm");
+    println!("cargo:rustc-link-arg=-lc");
 }

@@ -136,7 +136,7 @@ impl Wamr {
                 .into_report()
                 .change_context(WamrError::InvalidVal)?;
 
-            jinfo!("{} is a AOT XIP file", wasm);
+            jdebug!("{} is a AOT XIP file", wasm);
 
             mb = MapBuffer::map_file(
                 ptr::null_mut(),
@@ -203,7 +203,7 @@ impl Wamr {
                 .attach_printable(error_str);
         }
 
-        jinfo!("Start running {}", wasm);
+        jdebug!("Start running {}", wasm);
 
         result =
             unsafe { libiwasm::wasm_application_execute_main(module_inst, 0, ptr::null_mut()) };

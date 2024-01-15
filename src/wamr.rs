@@ -108,6 +108,8 @@ impl Wamr {
             running_mode: 0,
             llvm_jit_opt_level: 0,
             llvm_jit_size_level: 0,
+            segue_flags:0,
+            enable_linux_perf: false,
         };
 
         let mut result = unsafe {
@@ -165,9 +167,6 @@ impl Wamr {
                 )
             }
         };
-
-        //drop(mb);
-        //drop(buf);
 
         if module.is_null() {
             let error_str = unsafe {

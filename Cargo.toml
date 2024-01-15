@@ -16,6 +16,7 @@ libc = "0.2.147"
 
 [build-dependencies]
 jlogger-tracing = "0.1.4"
+bindgen = "0.69.2"
 
 [profile.dev]
 opt-level = 1
@@ -25,3 +26,4 @@ overflow-checks = false
 strip = true
 opt-level = "s"
 lto = true
+

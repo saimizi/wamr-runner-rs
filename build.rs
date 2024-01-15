@@ -71,7 +71,19 @@ fn main() {
     jinfo!("{}", log);
     let _ = remove_file(wasm_log_file);
 
-    jinfo!(wasm_dir = work_dir);
+
+    let wasm_export = format!("{wasm_dir}/core/iwasm/include/wasm_export.h");
+    jinfo!(wasm_export=wasm_export);
+    let binding = bindgen::Builder::default()
+        .header(&wasm_export)
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
+        .generate()
+        .expect("Unable to generate bindings");
+    let wasm_export_rs = format!("{out_dir}/wasm_export.rs");
+    binding
+        .write_to_file(&wasm_export_rs)
+        .expect("Failed to create binding file for wasm_export.h");
+    jinfo!("Created binding: {}", wasm_export_rs);
 
     println!("cargo:rerun-if-changed=wamr-1.2.2");
     println!("cargo:rustc-link-search={}", work_dir);

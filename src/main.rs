@@ -21,6 +21,10 @@ pub struct Cli {
     #[arg(long, value_name = "HEAP SIZE")]
     heap_size_kb: Option<usize>,
 
+    /// Maximum number of threads supported
+    #[arg(long, value_name = "Thread", default_value = "4")]
+    thread_num: u32,
+
     #[arg(short, long, action=clap::ArgAction::Count)]
     verbose: u8,
 }

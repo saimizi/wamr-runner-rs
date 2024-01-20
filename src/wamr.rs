@@ -117,7 +117,7 @@ impl Wamr {
             native_module_name: ptr::null(),
             native_symbols: ptr::null_mut(),
             n_native_symbols: 0,
-            max_thread_num: 0,
+            max_thread_num: cli.thread_num,
             ip_addr: [0; 128usize],
             unused: 0,
             instance_port: 0,

@@ -46,6 +46,7 @@ fn main() {
         .arg("-DWAMR_BUILD_FAST_INTERP=1")
         .arg("-DWAMR_BUILD_LIBC_WASI=1")
         .arg("-DWAMR_BUILD_LIB_WASI_THREADS=1")
+        .arg("-DCMAKE_EXPORT_COMPILE_COMMANDS=1")
         .stdout(Stdio::from(output.try_clone().unwrap()))
         .stderr(Stdio::from(output.try_clone().unwrap()))
         .spawn()
@@ -66,6 +67,13 @@ fn main() {
         .unwrap()
         .wait_with_output()
         .unwrap();
+
+    let _ = fs::remove_file(format!("{wasm_dir}/compile_commands.json"));
+    fs::copy(
+        format!("{work_dir}/compile_commands.json"),
+        format!("{wasm_dir}/compile_commands.json"),
+    )
+    .expect("Failed to copy compile_commands.json");
 
     let log = fs::read_to_string(wasm_log_file).unwrap();
     jinfo!("{}", log);
